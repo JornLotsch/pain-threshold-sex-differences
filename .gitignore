@@ -1,0 +1,22 @@
+# Plot files
+*.svg
+*.png
+
+# IDE folders
+.idea/
+*.code-workspace
+
+# Python virtual environment
+.venv/
+venv/
+
+# R-specific files and folders
+.Rproj.user/
+*.Rproj
+
+# Hidden files in the current directory
+.*
+
+# Exceptions to hidden files rule (keep git-related files)
+!.gitignore
+!.gitattributes
