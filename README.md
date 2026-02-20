@@ -137,60 +137,38 @@ install.packages(c("inspectdf", "ggplot2"))
 
 ### Quick Start
 
-Before running the pipeline, ensure you have:
-1. **Python 3.12.3** and **R 4.5.2** installed
-2. **All required packages** installed (see Installation section)
-3. **Raw data file** `Phaeno_125.csv` placed in the appropriate directory
-4. **Updated paths** in both scripts (see Path Configuration below)
+Before running the pipeline:
 
-### Complete Pipeline
+1. **Download the dataset from Mendeley Data:** https://doi.org/10.17632/y6v3rtpgps.1
+   - Download `exp_pain_data_orig.csv`, `exp_pain_data_transformed.csv`, `exp_pain_metadata.csv`
 
-**Note:** You must have the raw data file `Phaeno_125.csv` to run the complete pipeline.
+2. **Install dependencies:** Python 3.12.3 and R 4.5.2 with required packages (see Installation section)
 
-1. **Run Python transformation:**
+3. **Update paths in scripts** to point to your downloaded data directory
+
+### Running the Pipeline
+
+1. **Python Stage:**
    ```bash
-   cd Python/
-   python3 Read_explore_PainThresholds.py
+   python3 Python/Read_explore_PainThresholds.py
    ```
-   Output: `dfPainThresholdsAnalyzed_log_eff.csv`
 
-2. **Run R preprocessing:**
+2. **R Stage:**
    ```r
-   setwd("R/")
-   source("preprocessing_pain_Mendeley_mf_dataset.R")
+   source("R/preprocessing_pain_Mendeley_mf_dataset.R")
    ```
-   Output:
-   - `PainThresholds_scaled_Training.csv`
-   - `PainThresholds_scaled_Test.csv`
 
 ### Path Configuration
 
-**Important:** Update the paths in both scripts to match your local directory structure:
+Update the data directory path in both scripts:
 
-**Python script** (`Python/Read_explore_PainThresholds.py`):
-```python
-pfad_o = "/path/to/your/data/"  # Absolute path to parent directory containing raw data
-pfad_u1 = "09Originale/"         # Relative path to subfolder within pfad_o
-```
+**Python:** Edit `data_dir` in `Python/Read_explore_PainThresholds.py`
+**R:** Edit `data_dir` in `R/preprocessing_pain_Mendeley_mf_dataset.R`
 
-**R script** (`R/preprocessing_pain_Mendeley_mf_dataset.R`):
-```r
-pfad_o  <- "/path/to/your/data/"  # Absolute path to parent directory (same as Python)
-pfad_u  <- "09Originale/"          # Raw data folder (relative to pfad_o)
-pfad_u1 <- "08AnalyseProgramme/"   # Analysis folder (relative to pfad_o)
-```
-
-**Expected directory structure:**
-```
-/path/to/your/data/
-├── 09Originale/
-│   ├── Phaeno_125.csv              # Raw pain threshold data (required)
-│   └── [other phenotype files]
-└── 08AnalyseProgramme/             # This repository
-    ├── Python/
-    ├── R/
-    └── README.md
-```
+Both scripts expect these files in your data directory:
+- `exp_pain_data_orig.csv`
+- `exp_pain_data_transformed.csv`
+- `exp_pain_metadata.csv`
 
 ## Key Methodological Decisions
 
@@ -311,7 +289,7 @@ After running the preprocessing pipeline:
 
 ### Data Not Included in This Repository
 
-The raw data file `Phaeno_125.csv` (original single-file format) is not included; use the Mendeley Data repository files instead.
+The raw data file `Phaeno_125.csv` (original single-file format) is not included in this repository; use the Mendeley Data repository files instead. However, the original `Phaeno_125.csv` file is available from the corresponding author upon reasonable request.
 
 
 ---
