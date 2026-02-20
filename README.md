@@ -2,6 +2,8 @@
 
 ## Dataset: Quantitative Sensory Testing Dataset with Capsaicin and Menthol Sensitization Assessing Modality-Specific Sex Differences and Sensitization Effect Sizes in 125 Healthy Volunteers
 
+## Quantitative sensory testing dataset assessing sex differences and sensitization in 125 healthy volunteers
+
 This repository contains the complete preprocessing pipeline for the quantitative sensory testing (QST) dataset accompanying the publication:
 
 > **Quantitative sensory testing dataset assessing sex differences and sensitization in 125 healthy volunteers**
@@ -311,31 +313,6 @@ After running the preprocessing pipeline:
 
 The raw data file `Phaeno_125.csv` (original single-file format) is not included; use the Mendeley Data repository files instead.
 
-## Troubleshooting
-
-### Common Issues
-
-**Problem:** "ModuleNotFoundError" when running Python script
-- **Solution:** Ensure all Python packages are installed: `pip install numpy pandas matplotlib seaborn`
-- **Check version:** `python3 --version` (should be 3.12.3 or compatible)
-
-**Problem:** "Package not found" error in R
-- **Solution:** Install missing packages using the command provided in Installation section
-- **Check version:** `R --version` (should be 4.5.2 or compatible)
-
-**Problem:** "File not found" error when running scripts
-- **Solution:** Check path configuration (see Path Configuration section)
-- **Verify:** The directory structure matches expected layout
-- **Debug:** Add `print(getwd())` in R or `print(os.getcwd())` in Python to check current working directory
-
-**Problem:** Output files not generated
-- **Solution:** Check script console output for error messages
-- **Verify:** Raw data file `Phaeno_125.csv` exists in the correct location
-- **Check:** All required packages are properly installed
-
-## Version History
-
-- **v1.0.0** (Feb 2025) - Initial release accompanying Nature Scientific Data publication
 
 ---
 
