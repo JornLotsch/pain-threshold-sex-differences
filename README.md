@@ -2,7 +2,7 @@
 
 ## Dataset: Quantitative Sensory Testing Dataset with Capsaicin and Menthol Sensitization Assessing Modality-Specific Sex Differences and Sensitization Effect Sizes in 125 Healthy Volunteers
 
-## Quantitative sensory testing dataset assessing sex differences and sensitization in 125 healthy volunteers
+Medeley dataset: "Quantitative sensory testing dataset assessing sex differences and sensitization in 125 healthy volunteers" (links and details, see below).
 
 This repository contains the complete preprocessing pipeline for the quantitative sensory testing (QST) dataset accompanying the publication:
 
