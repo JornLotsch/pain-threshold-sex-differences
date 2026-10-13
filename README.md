@@ -150,7 +150,7 @@ Because the imputation models and scaling parameters were estimated on the compl
 2. Read `PainThresholds_scaled_Training.csv` and `PainThresholds_scaled_Test.csv`, rename, and sort by participant ID
 3. Write `exp_pain_data_orig.csv`, `exp_pain_data_transformed.csv`, `exp_pain_metadata.csv`
 4. Plot untransformed data (Figure 1, `plot_orig_data.svg/.png`) and metadata (`plot_metadata.svg/.png`)
-5. Quality control: ID consistency across files, observed ranges, and counts of values at the theoretical limits (`qc_ranges_censored_counts.csv`)
+5. Quality control: ID consistency across files, observed ranges, and counts of values at the theoretical limits (`qc_ranges_censored_counts.csv`), and comparison of training and validation sets (`qc_training_validation_comparison.csv`)
 
 ## Quality Control
 
@@ -172,6 +172,9 @@ Output of the quality-control section of `R/prepare_pain_Mendeley_mf_dataset.R`:
 | Cold_Menthol | °C | 0.0 | 30.3 | 19 (15.2%) | 0 |
 
 The censored values of von Frey (at 300 g) and cold (at 0 °C) were imputed (Stage 2). The single Heat_Capsaicin value at the 32 °C baseline temperature was not imputed.
+
+- **Dependence between training and validation sets** (`qc_training_validation_comparison.csv`): Imputation and standardization preceded the split, which was overlooked in the original analyses. Neither step used the class variable (sex), and imputation affected only 108 of 1,000 threshold values. Means of the z-scaled variables in the training set range from −0.04 to 0.01 and SDs from 0.99 to 1.04. Standardizing the validation set with training-only parameters would change its values by a median of 1.5% and at most 10.5% of one SD (Menthol_Effect_Cold; ≤ 6.0% for all other variables), without changing their rank order. No variable differs in distribution between the subsets (Wilcoxon and Kolmogorov-Smirnov tests, all p ≥ 0.54).
+- **Strictly independent validation:** impute the censored values and estimate the standardization parameters in the training set only, then apply them to the validation set, starting from `exp_pain_data_orig.csv` and the `TrainingValidation` column of `exp_pain_metadata.csv`. `R/verify_reproduction_from_deposited_data.R` can be adapted for this purpose.
 
 ## Verification of Reproducibility
 
@@ -199,13 +202,17 @@ Running `R/prepare_pain_Mendeley_mf_dataset.R` on the original analysis files re
 
 ## Software Requirements and Installation
 
+### Software Versions
+
+The Python and R preprocessing stages were originally run in 2022; the exact software versions used at that time were not recorded. All stages were re-run with the versions listed below: the Python stage reproduces the original intermediate file `dfPainThresholdsAnalyzed_log_eff.csv` (maximum absolute deviation < 1e-15), the R preprocessing stage reproduces `PainThresholds_scaled_Training.csv` and `PainThresholds_scaled_Test.csv` byte-identically, and the assembly stage reproduces the three deposited files byte-identically.
+
 ### Python
-- **Version:** 3.12.3
-- **Packages:** `numpy` (≥1.26.4), `pandas`
+- **Version:** re-run and verified with Python 3.12.12
+- **Packages:** `numpy` 1.26.4, `pandas` 3.0.5
 - **Install:** `pip install numpy pandas`
 
 ### R
-- **Version:** 4.5.2 (original analysis); verification re-run with R 4.6.1, lodi 0.9.2, opdisDownsampling 1.7, inspectdf 0.0.12.1, ggplot2 4.0.3, dplyr 1.2.1
+- **Version:** re-run and verified with R 4.6.1, lodi 0.9.2, opdisDownsampling 1.7, inspectdf 0.0.12.1, ggplot2 4.0.3, dplyr 1.2.1
 - **Required packages (Stage 2 and verification):** `lodi`, `opdisDownsampling`, `dplyr`, `parallel`, `inspectdf`, `ggplot2` (`inspectdf` and `ggplot2` are used by `FindMostCorrelatedVariables2()` for the predictor selection)
 - **Required packages (Stage 3):** `ggplot2`, `reshape2`, `ggthemes`, `dplyr`, `tidyr`, `ggnewscale`
 - **Install:**
@@ -275,7 +282,7 @@ The paths are specific to the original analysis environment and must be adapted:
 |---|---|---|
 | `Python/Read_explore_PainThresholds.py` | `Phaeno_125.csv` | `dfPainThresholdsAnalyzed_log_eff.csv` |
 | `R/preprocessing_pain_Mendeley_mf_dataset.R` | `Phaeno_125.csv`, `dfPainThresholdsAnalyzed_log_eff.csv` | `PainThresholds_scaled_Training.csv`, `PainThresholds_scaled_Test.csv` |
-| `R/prepare_pain_Mendeley_mf_dataset.R` | `Phaeno_125.csv`, `PainThresholds_scaled_Training.csv`, `PainThresholds_scaled_Test.csv` | `exp_pain_data_orig.csv`, `exp_pain_data_transformed.csv`, `exp_pain_metadata.csv`, `plot_orig_data.*`, `plot_metadata.*`, `qc_ranges_censored_counts.csv` |
+| `R/prepare_pain_Mendeley_mf_dataset.R` | `Phaeno_125.csv`, `PainThresholds_scaled_Training.csv`, `PainThresholds_scaled_Test.csv` | `exp_pain_data_orig.csv`, `exp_pain_data_transformed.csv`, `exp_pain_metadata.csv`, `plot_orig_data.*`, `plot_metadata.*`, `qc_ranges_censored_counts.csv`, `qc_training_validation_comparison.csv` |
 | `R/verify_reproduction_from_deposited_data.R` | `exp_pain_data_orig.csv`, `exp_pain_data_transformed.csv`, `exp_pain_metadata.csv` | Console report of the comparison |
 
 ## Key Methodological Decisions
@@ -349,7 +356,7 @@ https://github.com/JornLotsch/pain-threshold-sex-differences
 When using output from this pipeline, also cite the key R packages:
 
 **lodi:**
-> Boss, J., Wetzels, M., & Muggeo, V. M. R. (2020). lodi: Limit of Detection Imputation for Single-Pollutant Models. R package version 0.9.2. https://CRAN.R-project.org/package=lodi
+> Boss, J., & Rix, A. (2020). lodi: Limit of Detection Imputation for Single-Pollutant Models. R package version 0.9.2. https://CRAN.R-project.org/package=lodi
 
 **opdisDownsampling:**
 > Lötsch, J., & Ultsch, A. (2021). opdisDownsampling: Optimal Distribution Preserving Down-Sampling of Bio-Medical Data. R package version 1.5. https://CRAN.R-project.org/package=opdisDownsampling

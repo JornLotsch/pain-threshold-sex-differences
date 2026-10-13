@@ -222,16 +222,19 @@ plot_df_orig_data <- cbind.data.frame(Sex = Phaeno_125_metadata_renamed$Sex, Tra
 plot_df_orig_data_long <- reshape2::melt(plot_df_orig_data, id.vars = c("Sex", "TrainingValidation"))
 
 # Combined Sex x TrainingValidation group, so that the legend shows all four
-# combinations unambiguously (revision: previously separate color and shape legends)
+# combinations unambiguously (revision: previously separate color and shape legends).
+# Four colors: hue codes sex, darker (training) / lighter (validation) shade codes
+# the dataset; checked for deutan, protan and tritan color vision deficiency
+# (colorspace::deutan etc.). Shapes additionally code the dataset.
 plot_df_orig_data_long$Group <- factor(
   paste(plot_df_orig_data_long$Sex, tolower(plot_df_orig_data_long$TrainingValidation), sep = ", "),
   levels = c("Female, training", "Female, validation", "Male, training", "Male, validation")
 )
 group_colors <- c(
-  "Female, training"   = ggthemes::colorblind_pal()(8)[7],
-  "Female, validation" = ggthemes::colorblind_pal()(8)[7],
-  "Male, training"     = ggthemes::colorblind_pal()(8)[6],
-  "Male, validation"   = ggthemes::colorblind_pal()(8)[6]
+  "Female, training"   = "#C24100", # dark vermilion
+  "Female, validation" = "#F39B3C", # light orange
+  "Male, training"     = "#08519C", # dark blue
+  "Male, validation"   = "#5AAEE6"  # light blue
 )
 group_shapes <- c(
   "Female, training"   = 16,
@@ -438,6 +441,47 @@ cat("Observed ranges and censored data (values at theoretical min / max):\n")
 print(censored_counts_df)
 
 write.csv(censored_counts_df, "qc_ranges_censored_counts.csv", row.names = FALSE)
+
+
+# ================= Quality control: training vs. validation ==================
+
+# Imputation and z-standardization were performed on all 125 subjects before the
+# training/validation split (not considered in the original analyses). Neither step
+# used the class variable (sex). Here, the size of the resulting dependence is
+# quantified: (i) means and SDs of the z-scaled variables in both subsets, and
+# (ii) the change of the validation values if standardization had used the
+# training subset only. As the data are z-scaled, differences are in SD units,
+# i.e., 0.01 corresponds to 1% of the standard deviation.
+transformed_vars <- setdiff(names(Pheno_125_prepared_data_final), "ID")
+is_training <- Phaeno_125_metadata_renamed$TrainingValidation == "Training"
+X_training   <- Pheno_125_prepared_data_final[is_training, transformed_vars]
+X_validation <- Pheno_125_prepared_data_final[!is_training, transformed_vars]
+
+split_stats_df <- data.frame(
+  Variable        = transformed_vars,
+  Mean_training   = colMeans(X_training),
+  SD_training     = apply(X_training, 2, sd),
+  Mean_validation = colMeans(X_validation),
+  SD_validation   = apply(X_validation, 2, sd),
+  p_Wilcoxon      = sapply(transformed_vars, function(v) wilcox.test(X_training[[v]], X_validation[[v]])$p.value),
+  p_KS            = sapply(transformed_vars, function(v) suppressWarnings(ks.test(X_training[[v]], X_validation[[v]])$p.value)),
+  row.names = NULL
+)
+
+# Validation values standardized with training-only parameters
+X_validation_rescaled <- sweep(sweep(X_validation, 2, split_stats_df$Mean_training), 2, split_stats_df$SD_training, "/")
+rescaling_change <- abs(as.matrix(X_validation_rescaled) - as.matrix(X_validation))
+split_stats_df$Max_change_validation    <- apply(rescaling_change, 2, max)
+split_stats_df$Median_change_validation <- apply(rescaling_change, 2, median)
+
+cat("Training vs. validation (z-scaled data):\n")
+print(split_stats_df, digits = 3)
+cat("Change of validation z-values with training-only standardization: median",
+    round(100 * median(rescaling_change), 1), "%, maximum", round(100 * max(rescaling_change), 1), "% of one SD\n")
+cat("Rank order of validation values unchanged:",
+    all(sapply(transformed_vars, function(v) identical(rank(X_validation_rescaled[[v]]), rank(X_validation[[v]])))), "\n")
+
+write.csv(split_stats_df, "qc_training_validation_comparison.csv", row.names = FALSE)
 
 # Verification that the deposited transformed data and training/validation
 # assignment can be regenerated from the deposited files:
