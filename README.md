@@ -23,7 +23,7 @@ In addition, `R/verify_reproduction_from_deposited_data.R` regenerates `exp_pain
 This dataset contains experimental pain threshold measurements collected from 125 healthy adult volunteers under both baseline and chemically-sensitized conditions. The data were generated using established quantitative sensory testing (QST) protocols, including mechanical (punctate and blunt pressure), thermal (heat and cold), and electrical pain modalities. Sensitization was induced using topical capsaicin (for heat and punctate pressure) and menthol (for cold) to assess pain plasticity and sensitization mechanisms.
 
 **Dataset Citation:**
-> Lotsch, Jorn; Flühr, Karin; Neddermeyer, Till J. (2026), "Quantitative sensory testing dataset with capsaicin and menthol sensitization assessing modality-specific sex differences and sensitization effect sizes in 125 healthy volunteers", Mendeley Data, V1, doi: 10.17632/y6v3rtpgps.1
+> Lotsch, Jorn; Flühr, Karin; Neddermeyer, Till J. (2026), "Quantitative sensory testing dataset with capsaicin and menthol sensitization assessing modality-specific sex differences and sensitization effect sizes in 125 healthy volunteers", Mendeley Data, V2, doi: 10.17632/y6v3rtpgps.2
 
 ### Input Data
 
@@ -227,7 +227,7 @@ install.packages(c("lodi", "opdisDownsampling", "dplyr", "inspectdf", "ggplot2",
 
 Before running the pipeline:
 
-1. **Download the dataset from Mendeley Data:** https://doi.org/10.17632/y6v3rtpgps.1
+1. **Download the dataset from Mendeley Data:** https://doi.org/10.17632/y6v3rtpgps.2
    - Download `exp_pain_data_orig.csv`, `exp_pain_data_transformed.csv`, `exp_pain_metadata.csv`
 
 2. **Install dependencies:** Python 3.12.3 and R 4.5.2 with required packages (see Installation section)
@@ -392,9 +392,11 @@ Or contact the corresponding author (to be specified upon publication).
 The complete participant-level pain threshold dataset and metadata are publicly available through Mendeley Data:
 
 **Mendeley Data Repository:**
-> Lotsch, Jorn; Flühr, Karin; Neddermeyer, Till J. (2026), "Quantitative sensory testing dataset with capsaicin and menthol sensitization assessing modality-specific sex differences and sensitization effect sizes in 125 healthy volunteers", Mendeley Data, V1, doi: 10.17632/y6v3rtpgps.1
+> Lotsch, Jorn; Flühr, Karin; Neddermeyer, Till J. (2026), "Quantitative sensory testing dataset with capsaicin and menthol sensitization assessing modality-specific sex differences and sensitization effect sizes in 125 healthy volunteers", Mendeley Data, V2, doi: 10.17632/y6v3rtpgps.2
 
 ### Deposited Data Files (Available on Mendeley Data)
+
+Version 2 of the Mendeley dataset contains the same data files as version 1 with a revised and corrected dataset description (terminology, units, processing order).
 
 The complete dataset includes:
 - **exp_pain_data_orig.csv** - Untransformed participant-level pain threshold estimates in original units (125 subjects × 9 variables: ID + 8 thresholds). Trial-level observations are not included.
