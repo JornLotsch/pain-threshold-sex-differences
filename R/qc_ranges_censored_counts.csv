@@ -1,0 +1,9 @@
+"Variable","Theoretical_Min","Theoretical_Max","Observed_Min","Observed_Max","n_valid","n_at_min","n_at_max","Percent_at_min","Percent_at_max"
+"vonFrey",0.008,300,2.6,300,125,0,38,0,30.4
+"Heat",32,50,39.4,49.8,125,0,0,0,0
+"Cold",0,32,0,28.1,125,30,0,24,0
+"Pressure",0,Inf,15.4,103,125,0,0,0,0
+"Current",0,20,0.6,7,125,0,0,0,0
+"vonFrey_Capsaicin",0.008,300,1.61,300,125,0,21,0,16.8
+"Heat_Capsaicin",32,50,32,48.3,125,1,0,0.8,0
+"Cold_Menthol",0,32,0,30.3,125,19,0,15.2,0
