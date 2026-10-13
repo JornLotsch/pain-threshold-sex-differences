@@ -247,7 +247,7 @@ facet_labs <- c(
   "vonFrey"           = "g",
   "Heat"              = "°C",
   "Cold"              = "°C",
-  "Pressure"          = "N/cm2",
+  "Pressure"          = "N/cm²",
   "Current"           = "mA",
   "vonFrey_Capsaicin" = "g",
   "Heat_Capsaicin"    = "°C",
@@ -277,6 +277,7 @@ plot_orig_data <-
     strip.text       = element_text(colour = "black"),
     strip.placement  = "outside",
     axis.title.y     = element_blank(),
+    axis.title.x     = element_blank(),
     legend.position  = "bottom",
     legend.direction = "horizontal"
   ) +
@@ -310,18 +311,19 @@ fac_long <- plot_df_metadata %>%
     values_to = "value"
   )
 
+# Revision: colors consistent with Figure 1 (sex: orange/blue; training/validation:
+# dark/light), tester explicitly labeled, legend ordered as the columns
 plot_metadata <- ggplot() +
   geom_tile(
     data = age_long,
-    aes(x = variable, y = ID, fill = value),
-    alpha = .6
+    aes(x = variable, y = ID, fill = value)
   ) +
   scale_fill_gradient(
     name = "Age",
-    # low = "cornsilk",
-    # high = "cornsilk4"
-    low = ggthemes::colorblind_pal()(8)[2],
-    high = ggthemes::colorblind_pal()(8)[1]
+    # low = ggthemes::colorblind_pal()(8)[2],
+    # high = ggthemes::colorblind_pal()(8)[1]
+    low = "#EFEDF5",
+    high = "#54278F"
   ) +
   ggnewscale::new_scale_fill() +
   geom_tile(
@@ -340,16 +342,29 @@ plot_metadata <- ggplot() +
     #   "Training" = "cornsilk2",
     #   "Validation" = "cornsilk4"
     # )
+    # values = c(
+    #   "Nonsmoker" = ggplot2::alpha(ggthemes::colorblind_pal()(8)[2], .6),
+    #   "Smoker" = ggplot2::alpha(ggthemes::colorblind_pal()(8)[3], .6),
+    #   "Male" = ggplot2::alpha(ggthemes::colorblind_pal()(8)[4], .6),
+    #   "Female" = ggplot2::alpha(ggthemes::colorblind_pal()(8)[7], .6),
+    #   "M" = ggplot2::alpha(ggthemes::colorblind_pal()(8)[5], .6),
+    #   "F" = ggplot2::alpha(ggthemes::colorblind_pal()(8)[8], .6),
+    #   "Training" = ggplot2::alpha(ggthemes::colorblind_pal()(8)[1], .5),
+    #   "Validation" = ggplot2::alpha(ggthemes::colorblind_pal()(8)[6], .6)
+    # )
     values = c(
-      "Nonsmoker" = ggplot2::alpha(ggthemes::colorblind_pal()(8)[2], .6),
-      "Smoker" = ggplot2::alpha(ggthemes::colorblind_pal()(8)[3], .6),
-      "Male" = ggplot2::alpha(ggthemes::colorblind_pal()(8)[4], .6),
-      "Female" = ggplot2::alpha(ggthemes::colorblind_pal()(8)[7], .6),
-      "M" = ggplot2::alpha(ggthemes::colorblind_pal()(8)[5], .6),
-      "F" = ggplot2::alpha(ggthemes::colorblind_pal()(8)[8], .6),
-      "Training" = ggplot2::alpha(ggthemes::colorblind_pal()(8)[1], .5),
-      "Validation" = ggplot2::alpha(ggthemes::colorblind_pal()(8)[6], .6)
-    )
+      "Female"     = ggplot2::alpha("#C24100", .75),
+      "Male"       = ggplot2::alpha("#08519C", .75),
+      "Nonsmoker"  = ggplot2::alpha("#009E73", .3),
+      "Smoker"     = ggplot2::alpha("#009E73", .85),
+      "F"          = ggplot2::alpha("#CC79A7", .7),
+      "M"          = ggplot2::alpha("#F0E442", .8),
+      "Training"   = "grey35",
+      "Validation" = "grey80"
+    ),
+    breaks = c("Female", "Male", "Nonsmoker", "Smoker", "F", "M", "Training", "Validation"),
+    labels = c("Female", "Male", "Nonsmoker", "Smoker", "Tester F", "Tester M", "Training", "Validation"),
+    guide = guide_legend(nrow = 2, byrow = FALSE)
   ) +
   scale_y_discrete(expand = c(0, 0)) +
   scale_x_discrete(expand = c(0, 0)) +
@@ -358,7 +373,7 @@ plot_metadata <- ggplot() +
     axis.title = element_blank(),
     axis.text.y = element_text(size = 3),
     panel.grid = element_blank(),
-    legend.position = "bottom", legend.direction = "horizontal", legend.byrow = TRUE
+    legend.position = "bottom", legend.direction = "horizontal"
   )
 
 print(plot_metadata)
