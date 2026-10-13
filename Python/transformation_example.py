@@ -2,9 +2,9 @@
 # to normalize distributions while preserving sign information
 
 def signed_log_transform(data):
-    """Apply signed log transformation: sign(x) × log(|x| + 1)"""
+    """Apply signed log transformation: sign(x) × ln(|x + 1|), natural logarithm"""
     data_min = np.nanmin(data)
-    s = np.sign(data + 1)  # preserve direction
+    s = np.sign(data)  # preserve direction (as in Read_explore_PainThresholds.py)
     data_abs = np.absolute(data + 1)
     data_transformed = s * np.log(data_abs.astype("float"))
     return data_transformed

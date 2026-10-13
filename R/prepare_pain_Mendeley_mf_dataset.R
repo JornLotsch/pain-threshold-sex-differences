@@ -1,3 +1,23 @@
+################################################################################
+# Assemble the files deposited at Mendeley Data (doi: 10.17632/y6v3rtpgps.1)
+################################################################################
+#
+# Final step of the pipeline (after Python/Read_explore_PainThresholds.py and
+# R/preprocessing_pain_Mendeley_mf_dataset.R). Writes:
+#   exp_pain_data_orig.csv        - participant-level threshold estimates
+#                                   (derived from repeated measurements or
+#                                   logistic regression; not trial-level data),
+#                                   untransformed, in original units
+#   exp_pain_data_transformed.csv - ln(x + 1) transformed, imputed, z-scaled
+#                                   data from PainThresholds_scaled_*.csv
+#   exp_pain_metadata.csv         - metadata incl. training/validation assignment
+# Also produces Figure 1 (plot_orig_data), the metadata plot, and quality-control
+# output (ID consistency, observed ranges, censored values).
+#
+# Units: von Frey in g, heat and cold in °C, pressure in N/cm², current in mA.
+#
+################################################################################
+
 ############### Libraries ##############################
 
 library(ggplot2)
@@ -201,6 +221,25 @@ plot_df_orig_data <- cbind.data.frame(Sex = Phaeno_125_metadata_renamed$Sex, Tra
 
 plot_df_orig_data_long <- reshape2::melt(plot_df_orig_data, id.vars = c("Sex", "TrainingValidation"))
 
+# Combined Sex x TrainingValidation group, so that the legend shows all four
+# combinations unambiguously (revision: previously separate color and shape legends)
+plot_df_orig_data_long$Group <- factor(
+  paste(plot_df_orig_data_long$Sex, tolower(plot_df_orig_data_long$TrainingValidation), sep = ", "),
+  levels = c("Female, training", "Female, validation", "Male, training", "Male, validation")
+)
+group_colors <- c(
+  "Female, training"   = ggthemes::colorblind_pal()(8)[7],
+  "Female, validation" = ggthemes::colorblind_pal()(8)[7],
+  "Male, training"     = ggthemes::colorblind_pal()(8)[6],
+  "Male, validation"   = ggthemes::colorblind_pal()(8)[6]
+)
+group_shapes <- c(
+  "Female, training"   = 16,
+  "Female, validation" = 17,
+  "Male, training"     = 16,
+  "Male, validation"   = 17
+)
+
 facet_labs <- c(
   "vonFrey"           = "g",
   "Heat"              = "°C",
@@ -218,7 +257,7 @@ plot_orig_data <-
          aes(x = variable, y = value)) +
   geom_violin(alpha = 0.2, fill = "cornsilk", color = "cornsilk4") +
   geom_boxplot(alpha = 0.5, width = .2, color = "cornsilk4") +
-  geom_point(aes(color = Sex, shape = TrainingValidation),
+  geom_point(aes(color = Group, shape = Group),
              size = 2,
              position = position_jitter(width = 0.1),
              show.legend = TRUE) +
@@ -238,7 +277,9 @@ plot_orig_data <-
     legend.position  = "bottom",
     legend.direction = "horizontal"
   ) +
-  ggthemes::scale_color_colorblind()
+  scale_color_manual(name = "Sex, dataset", values = group_colors) +
+  scale_shape_manual(name = "Sex, dataset", values = group_shapes)
+  # ggthemes::scale_color_colorblind()
   # scale_color_manual(values = c("dodgerblue", "chartreuse3"))
 
 print(plot_orig_data)
@@ -321,3 +362,83 @@ print(plot_metadata)
 
 ggsave(plot = plot_metadata, filename = "plot_metadata.svg", width = 9, height = 9)
 ggsave(plot = plot_metadata, filename = "plot_metadata.png", width = 9, height = 9, dpi = 300)
+
+
+# ================= Quality control: ID consistency ==================
+
+# All three deposited files must contain the same unique IDs in the same order
+ids_orig        <- as.character(Phaeno_125_orig_pain_data_renamed$ID)
+ids_transformed <- as.character(Pheno_125_prepared_data_final$ID)
+ids_metadata    <- as.character(Phaeno_125_metadata_renamed$ID)
+
+id_checks <- c(
+  n_subjects                     = length(ids_orig),
+  ids_unique                     = !anyDuplicated(ids_orig),
+  ids_no_missing                 = !anyNA(ids_orig),
+  orig_vs_metadata_identical     = identical(ids_orig, ids_metadata),
+  orig_vs_transformed_identical  = identical(ids_orig, ids_transformed)
+)
+cat("ID consistency checks:\n")
+print(id_checks)
+print(table(Phaeno_125_metadata_renamed$TrainingValidation, Phaeno_125_metadata_renamed$Sex))
+
+
+# ================= Count censored data ==================
+
+# Censored values imputed in preprocessing_pain_Mendeley_mf_dataset.R:
+# Cold and Cold_Menthol at 0 °C (left-censored), vonFrey and vonFrey_Capsaicin
+# at 300 g (right-censored). Other values at a theoretical limit are counted
+# here but were not imputed.
+
+# Theoretical (device / protocol) limits of each pain test
+PAIN_TESTS_LIMITS <- list(
+  "vonFrey"           = c(min = 0.008, max = 300), # g
+  "Heat"              = c(min = 32, max = 50), # °C
+  "Cold"              = c(min = 0, max = 32), # °C
+  "Pressure"          = c(min = 0, max = Inf), # N/cm2
+  "Current"           = c(min = 0, max = 20), # mA
+  "vonFrey_Capsaicin" = c(min = 0.008, max = 300), # g
+  "Heat_Capsaicin"    = c(min = 32, max = 50), # °C
+  "Cold_Menthol"      = c(min = 0, max = 32)  # °C
+)
+
+#' Count values at the theoretical limits of a variable
+#' @param x Numeric vector of measured values
+#' @param limits Named numeric vector with elements "min" and "max"
+#' @param tol Tolerance for the floating point comparison
+#' @return Named integer vector with counts at min and max
+count_censored <- function(x, limits, tol = 1e-8) {
+  x <- x[!is.na(x)]
+  c(
+    n_valid  = length(x),
+    n_at_min = sum(abs(x - limits[["min"]]) < tol),
+    n_at_max = sum(abs(x - limits[["max"]]) < tol)
+  )
+}
+
+censored_counts <- mapply(
+  FUN = count_censored,
+  x = Phaeno_125_orig_pain_data_renamed[, PAIN_TESTS_NAMES_ENGLISH],
+  limits = PAIN_TESTS_LIMITS[PAIN_TESTS_NAMES_ENGLISH]
+)
+
+censored_counts_df <- data.frame(
+  Variable        = PAIN_TESTS_NAMES_ENGLISH,
+  Theoretical_Min = sapply(PAIN_TESTS_LIMITS[PAIN_TESTS_NAMES_ENGLISH], `[[`, "min"),
+  Theoretical_Max = sapply(PAIN_TESTS_LIMITS[PAIN_TESTS_NAMES_ENGLISH], `[[`, "max"),
+  Observed_Min    = sapply(Phaeno_125_orig_pain_data_renamed[, PAIN_TESTS_NAMES_ENGLISH], min, na.rm = TRUE),
+  Observed_Max    = sapply(Phaeno_125_orig_pain_data_renamed[, PAIN_TESTS_NAMES_ENGLISH], max, na.rm = TRUE),
+  t(censored_counts),
+  row.names = NULL
+)
+censored_counts_df$Percent_at_min <- round(100 * censored_counts_df$n_at_min / censored_counts_df$n_valid, 1)
+censored_counts_df$Percent_at_max <- round(100 * censored_counts_df$n_at_max / censored_counts_df$n_valid, 1)
+
+cat("Observed ranges and censored data (values at theoretical min / max):\n")
+print(censored_counts_df)
+
+write.csv(censored_counts_df, "qc_ranges_censored_counts.csv", row.names = FALSE)
+
+# Verification that the deposited transformed data and training/validation
+# assignment can be regenerated from the deposited files:
+# see verify_reproduction_from_deposited_data.R

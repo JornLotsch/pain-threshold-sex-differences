@@ -12,6 +12,29 @@
 # Output: PainThresholds_scaled_Training.csv (80% training set, scaled)
 #         PainThresholds_scaled_Test.csv (20% test set, scaled)
 #
+# These two output files are subsequently assembled into the deposited
+# Mendeley file exp_pain_data_transformed.csv (and the TrainingValidation
+# column of exp_pain_metadata.csv) by prepare_pain_Mendeley_mf_dataset.R.
+#
+# Notes added during revision (Scientific Data):
+# - Input values are participant-level threshold estimates (derived from
+#   repeated measurements or logistic regression), not trial-level observations.
+# - Units of the untransformed thresholds: von Frey in g (filaments 0.008-300 g),
+#   heat and cold in °C, blunt pressure in N/cm², electrical current in mA.
+# - The log transformation (Python stage) uses the natural logarithm, ln(x + 1).
+# - The sign reversal of the von Frey variables below is internal to the
+#   imputation only (clmi() handles left-censoring); imputed values are negated
+#   back, so the deposited von Frey variables are NOT sign-reversed.
+# - Exact order of steps: (1) ln(x + 1) transformation and effect calculation
+#   (Python), (2) censored-value imputation on all 125 subjects, (3) z-score
+#   standardization on all 125 subjects, (4) training/validation split.
+#   Imputation and scaling parameters were thus estimated on the complete
+#   dataset; the validation subset is not fully independent of the training data.
+# - Regeneration of exp_pain_data_transformed.csv and of the training/validation
+#   assignment directly from the deposited Mendeley files is shown in
+#   verify_reproduction_from_deposited_data.R.
+# - ggplot2 must be loaded, as FindMostCorrelatedVariables2() uses its themes.
+#
 ################################################################################
 
 ############################### Paths #########################################
@@ -26,6 +49,7 @@ pfad_u2 <- "04Umatrix/"
 library(parallel)
 library(lodi)                # For censored data imputation (clmi function)
 library(dplyr)
+library(ggplot2)             # Required by FindMostCorrelatedVariables2()
 
 # Source custom function for correlation analysis
 source("FindMostCorrelatedVariables2.R")
@@ -60,10 +84,10 @@ dim(PainThresholdsData_transformed)
 ################################################################################
 # Pain threshold measurements have censoring due to instrument limits:
 # - Cold (Kaelte): Some subjects did not feel pain even at 0°C (coded as 0)
-# - vonFrey: Some subjects did not feel pain even at max 300mN (coded as log(301))
+# - vonFrey: Some subjects did not feel pain even at max 300 g (coded as ln(301))
 #
 # Strategy: Use correlated variables to impute censored values via clmi()
-# (Censored data Left-truncated Multiple Imputation)
+# (censored likelihood multiple imputation, R package lodi)
 # Correlation threshold: |r| >= 0.4 was used to select predictor variables
 ################################################################################
 
@@ -98,7 +122,8 @@ sum(PainThresholdsData_transformed_all_toImpute$vonFrey_C >= log(300+1))
 # Kaelte: 0 indicates no pain at minimum temperature (left-censored)
 PainThresholdsData_transformed_all_toImpute$Kaelte_NA <- ifelse(PainThresholdsData_transformed_all_toImpute$Kaelte == 0, NA, PainThresholdsData_transformed_all_toImpute$Kaelte)
 PainThresholdsData_transformed_all_toImpute$Kaelte_M_NA <- ifelse(PainThresholdsData_transformed_all_toImpute$Kaelte_M == 0, NA, PainThresholdsData_transformed_all_toImpute$Kaelte_M)
-# vonFrey: log(301) indicates no pain at maximum pressure (right-censored, so negate for left-censoring)
+# vonFrey: ln(301) indicates no pain at maximum force of 300 g (right-censored, so negate for left-censoring;
+# the negation is reversed after imputation, see STEP 3)
 PainThresholdsData_transformed_all_toImpute$vonFrey_NA <- ifelse(PainThresholdsData_transformed_all_toImpute$vonFrey >=  log(300+1), NA, -PainThresholdsData_transformed_all_toImpute$vonFrey)
 PainThresholdsData_transformed_all_toImpute$vonFrey_C_NA <- ifelse(PainThresholdsData_transformed_all_toImpute$vonFrey_C >=  log(300+1), NA, -PainThresholdsData_transformed_all_toImpute$vonFrey_C)
 PainThresholdsData_transformed_all_toImpute
@@ -171,6 +196,8 @@ PainThresholds <- PainThresholdsData_transformed_imputed_proj
 #    that preserves distributional properties of the full dataset
 
 # Z-score standardization of all features (excluding Target column)
+# Note: mean and SD are computed on all 125 subjects, i.e., BEFORE the split below
+# (as was the imputation in STEP 3)
 PainThresholds_scaled <- PainThresholds
 PainThresholds_scaled[,2:ncol(PainThresholds_scaled)] <- scale(PainThresholds_scaled[,2:ncol(PainThresholds_scaled)])
 

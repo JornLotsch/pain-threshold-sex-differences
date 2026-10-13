@@ -48,6 +48,10 @@ for variable in dfPainThresholdsAnalyzed.columns:
     explore_tukey_lop(data=data_subset, powers=[-1, -0.5, -0.333333, 0, 0.333333, 0.5, 1, 2])
 
 # %% Transformation according to distribution majority vote
+# sign(x) * ln(|x + 1|), natural logarithm (np.log); as all thresholds are >= 0,
+# this equals ln(x + 1). No sign reversal is applied here.
+# Note: explore_tukey_lop and box_and_heatplots (imported above) are only used for
+# visual exploration and are not needed to produce dfPainThresholdsAnalyzed_log_eff.csv.
 
 dfPainThresholdsAnalyzed_log = dfPainThresholdsAnalyzed.copy()
 for variable in dfPainThresholdsAnalyzed_log.columns:

@@ -1,6 +1,7 @@
 # Conditional linear multiple imputation (clmi) for censored measurements
 # Left-censored: Cold thresholds = 0 (below detection limit)
-# Right-censored: von Frey thresholds ≥ log(301) (above 300 mN maximum force)
+# Right-censored: von Frey thresholds ≥ ln(301) (at 300 g maximum filament force)
+# The sign reversal of von Frey is internal to clmi() and reversed after imputation
 
 # 1. Identify censored values
 PainThresholdsData_transformed_all_toImpute$Kaelte_NA <-
